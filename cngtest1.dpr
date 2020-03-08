@@ -4,18 +4,18 @@ program cngtest1;
 
 uses
   SysUtils,
-  bcrypt in 'bcrypt.pas';
+  WinApi_BCrypt in 'WinApi_BCrypt.pas';
 
 var
   status: NTSTATUS;
   hAlg: BCRYPT_ALG_HANDLE;
 
-  cbData: Integer;
+  cbData: Cardinal;
 
-  cbHashObject: Integer;
+  cbHashObject: Cardinal;
   pbHashObject: Pointer;
 
-  cbHash: Integer;
+  cbHash: Cardinal;
   pbHash: Pointer;
 
   hHash: BCRYPT_HASH_HANDLE;
@@ -26,9 +26,23 @@ var
 begin
   try
 
+    status := 0;
+    hAlg := nil;
+
+    cbData := 0;
+
+    cbHashObject := 0;
+    pbHashObject := nil;
+
+    cbHash := 0;
+    pbHash := nil;
+
+    hHash := nil;
+
     rgbMsg := 'hello';
 
     //open an algorithm handle
+    hAlg := nil;
     status := BCryptOpenAlgorithmProvider(hAlg,
                                           BCRYPT_SHA256_ALGORITHM,
                                           nil,
