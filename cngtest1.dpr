@@ -17,7 +17,7 @@ function CryptBinaryToStringA(
   pszString: PChar;
   var pcchString: Cardinal) : BOOL; winapi; external 'crypt32.dll';
 
-function Base64Encode(pData: Pointer; iData: Integer) : string;
+function EncodeBase64(pData: Pointer; iData: Integer) : string;
 var
   dwLen: Cardinal;
 begin
@@ -26,6 +26,15 @@ begin
   CryptBinaryToStringA(pData, iData, CRYPT_STRING_BASE64 Or CRYPT_STRING_NOCRLF, nil, dwLen);
   SetLength(Result, dwLen);
   CryptBinaryToStringA(pData, iData, CRYPT_STRING_BASE64 Or CRYPT_STRING_NOCRLF, @Result[1], dwLen);
+  Result := Trim(Result);
+end;
+
+function EncodeBase64Url(pData: Pointer; iData: Integer) : string;
+begin
+  Result := EncodeBase64(pData, iData);
+  Result := StringReplace(Result, '+', '-', [rfReplaceAll]);
+  Result := StringReplace(Result, '/', '_', [rfReplaceAll]);
+  Result := StringReplace(Result, '=', '', [rfReplaceAll]);
 end;
 
 var
@@ -40,25 +49,28 @@ var
   cbHash: Cardinal;
   pbHash: Pointer;
 
+  cbKey: Cardinal;
+  pKey: Pointer;
+
   hHash: BCRYPT_HASH_HANDLE;
 
   rgbMsg: string;
-
-  sResult: string;
+  sExpectedHash: string;
+  sHash: string;
 
 begin
   try
-    rgbMsg := 'hello';
-    //rgbMsg := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ';
+    //rgbMsg := 'hello';
+    //sExpectedHash := 'aGVsbG8=';
 
-    // hello -> aGVsbG8=
-    sResult := Base64Encode(@rgbMsg[1], Length(rgbMsg));
+    rgbMsg := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ';
+    sExpectedHash := 'kXSdJhhUKTJemgs8O0rfIJmUaxoSIDdClL_OPmaC7Eo';
 
     //open an algorithm handle
     status := BCryptOpenAlgorithmProvider(hAlg,
                                           BCRYPT_SHA256_ALGORITHM,
                                           nil,
-                                          0);
+                                          BCRYPT_ALG_HANDLE_HMAC_FLAG);
 
     //calculate the size of the buffer to hold the hash object
     status := BCryptGetProperty(hAlg,
@@ -82,26 +94,31 @@ begin
     //allocate the hash buffer on the heap
     GetMem(pbHash, cbHash);
 
+    pKey := PChar('password');
+    cbKey := Length('password');
+
     //create a hash
     status := BCryptCreateHash(hAlg,
                                hHash,
                                pbHashObject,
                                cbHashObject,
-                               nil,
-                               0,
-                               0);    
+                               //nil, 0,
+                               pKey, cbKey,
+                               0);
 
     //hash some data
     status := BCryptHashData(hHash,
                              @rgbMsg[1],
                              length(rgbMsg),
                              0);
-    
+
     //close the hash
     status := BCryptFinishHash(hHash,
                                pbHash,
                                cbHash,
                                0);
+
+    sHash := EncodeBase64Url(pbHash, cbHash);
 
     BCryptCloseAlgorithmProvider(hAlg,0);
     BCryptDestroyHash(hHash);
