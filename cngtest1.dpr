@@ -3,8 +3,30 @@ program cngtest1;
 {$APPTYPE CONSOLE}
 
 uses
-  SysUtils,
+  SysUtils, Windows,
   WinApi_BCrypt in 'WinApi_BCrypt.pas';
+
+const
+  CRYPT_STRING_BASE64 = $00000001;
+  CRYPT_STRING_NOCRLF = $40000000;
+
+function CryptBinaryToStringA(
+  pbBinary: Pointer;
+  cbBinary: Integer;
+  dwFlags: Integer;
+  pszString: PChar;
+  var pcchString: Cardinal) : BOOL; winapi; external 'crypt32.dll';
+
+function Base64Encode(pData: Pointer; iData: Integer) : string;
+var
+  dwLen: Cardinal;
+begin
+  Result := '';
+  dwLen := 0;
+  CryptBinaryToStringA(pData, iData, CRYPT_STRING_BASE64 Or CRYPT_STRING_NOCRLF, nil, dwLen);
+  SetLength(Result, dwLen);
+  CryptBinaryToStringA(pData, iData, CRYPT_STRING_BASE64 Or CRYPT_STRING_NOCRLF, @Result[1], dwLen);
+end;
 
 var
   status: NTSTATUS;
@@ -22,27 +44,17 @@ var
 
   rgbMsg: string;
 
+  sResult: string;
 
 begin
   try
-
-    status := 0;
-    hAlg := nil;
-
-    cbData := 0;
-
-    cbHashObject := 0;
-    pbHashObject := nil;
-
-    cbHash := 0;
-    pbHash := nil;
-
-    hHash := nil;
-
     rgbMsg := 'hello';
+    //rgbMsg := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ';
+
+    // hello -> aGVsbG8=
+    sResult := Base64Encode(@rgbMsg[1], Length(rgbMsg));
 
     //open an algorithm handle
-    hAlg := nil;
     status := BCryptOpenAlgorithmProvider(hAlg,
                                           BCRYPT_SHA256_ALGORITHM,
                                           nil,
