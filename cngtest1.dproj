@@ -52,70 +52,6 @@
       
       
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       <Excluded_Packages Name="$(BDS)\bin\dclofficexp100.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
     </Excluded_Packages><Source><Source Name="MainSource">cngtest1.dpr</Source></Source></Delphi.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
@@ -125,6 +61,9 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <DCCReference Include="bcrypt.pas" />
+    <DCCReference Include="ccBase64.pas" />
+    <DCCReference Include="ccHash.pas" />
+    <DCCReference Include="ccJwt.pas" />
     <DCCReference Include="WinApi_BCrypt.pas" />
   </ItemGroup>
 </Project>
